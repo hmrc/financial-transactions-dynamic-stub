@@ -26,7 +26,7 @@ import uk.gov.hmrc.play.config.{AppName, RunMode}
 import uk.gov.hmrc.play.http.ws._
 
 @Singleton
-class WSHttp @Inject()(val environment: Environment,
+abstract class WSHttp @Inject()(val environment: Environment,
                        val conf: Configuration,
                        override val auditConnector: MicroserviceAuditConnector)
   extends WSGet with HttpGet
