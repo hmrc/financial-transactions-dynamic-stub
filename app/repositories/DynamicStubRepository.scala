@@ -14,12 +14,13 @@
  * limitations under the License.
  */
 
-package testUtils
+package repositories
 
-import akka.actor.ActorSystem
-import akka.stream.ActorMaterializer
+import play.api.libs.json.Format
+import play.api.libs.json.Writes.StringWrites
+import play.api.libs.json.Reads.StringReads
+import reactivemongo.api.DB
+import uk.gov.hmrc.mongo.ReactiveRepository
 
-trait MaterializerSupport {
-  implicit val system: ActorSystem = ActorSystem("Sys")
-  implicit val materializer: ActorMaterializer = ActorMaterializer()
-}
+class DynamicStubRepository[T](implicit mongo: () => DB, formats: Format[T])
+  extends ReactiveRepository[T, String]("data", mongo, formats, Format(StringReads, StringWrites))

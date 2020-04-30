@@ -17,34 +17,36 @@
 package controllers
 
 import javax.inject.{Inject, Singleton}
-
 import models.DataModel
 import models.HttpMethod._
 import play.api.libs.json.{JsValue, Json}
-import play.api.mvc.{Action, AnyContent, Result}
+import play.api.mvc.{Action, AnyContent, ControllerComponents, Result}
 import repositories.DataRepository
-import uk.gov.hmrc.play.bootstrap.controller.BaseController
+import uk.gov.hmrc.play.bootstrap.controller.BackendController
 import utils.SchemaValidation
 
-import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class SetupDataController @Inject()(schemaValidation: SchemaValidation, dataRepository: DataRepository) extends BaseController {
+class SetupDataController @Inject()(schemaValidation: SchemaValidation,
+                                    dataRepository: DataRepository,
+                                    cc: ControllerComponents)
+                                   (implicit ec: ExecutionContext) extends BackendController(cc) {
 
-  val addData: Action[JsValue] = Action.async(parse.json) {
-    implicit request => withJsonBody[DataModel](
-      json => json.method.toUpperCase match {
+  val addData: Action[JsValue] = Action.async(parse.json) { implicit request =>
+    withJsonBody[DataModel](
+      model => model.method.toUpperCase match {
         case GET | POST =>
-          schemaValidation.validateUrlMatch(json.schemaId, json._id) flatMap {
+          schemaValidation.validateUrlMatch(model.schemaId, model._id) flatMap {
             case true =>
-              schemaValidation.validateResponseJson(json.schemaId, json.response) flatMap {
-                case true => addStubDataToDB(json)
-                case false => Future.successful(BadRequest(s"The Json Body:\n\n${json.response.get} did not validate against the Schema Definition"))
+              schemaValidation.validateResponseJson(model.schemaId, model.response) flatMap {
+                case true => addStubDataToDB(model)
+                case false => Future.successful(BadRequest(
+                  s"The Json Body:\n\n${model.response.get} did not validate against the Schema Definition"))
               }
             case false =>
-              schemaValidation.loadUrlRegex(json.schemaId) map {
-                regex => BadRequest(s"URL ${json._id} did not match the Schema Definition Regex $regex")
+              schemaValidation.loadUrlRegex(model.schemaId) map {
+                regex => BadRequest(s"URL ${model._id} did not match the Schema Definition Regex $regex")
               }
           }
         case x => Future.successful(BadRequest(s"The method: $x is currently unsupported"))
@@ -54,26 +56,27 @@ class SetupDataController @Inject()(schemaValidation: SchemaValidation, dataRepo
     }
   }
 
-  private def addStubDataToDB(json: DataModel): Future[Result] = {
-    dataRepository().addEntry(json).map(_.ok match {
-      case true => Ok(s"The following JSON was added to the stub: \n\n${Json.toJson(json)}")
-      case _ => InternalServerError(s"Failed to add data to Stub.")
+  private def addStubDataToDB(model: DataModel): Future[Result] = {
+    dataRepository.insert(model).map(result => if (result.ok) {
+      Ok(s"The following JSON was added to the stub: \n\n${Json.toJson(model)}")
+    } else {
+      InternalServerError(s"Failed to add data to Stub.")
     })
   }
 
-  val removeData: String => Action[AnyContent] = url => Action.async {
-    implicit request =>
-      dataRepository().removeById(url).map(_.ok match {
-        case true => Ok("Success")
-        case _ => InternalServerError("Could not delete data")
-      })
+  val removeData: String => Action[AnyContent] = url => Action.async { implicit request =>
+    dataRepository.removeById(url).map(result => if (result.ok) {
+      Ok("Success")
+    } else {
+      InternalServerError("Could not delete data")
+    })
   }
 
-  val removeAll: Action[AnyContent] = Action.async {
-    implicit request =>
-      dataRepository().removeAll().map(_.ok match {
-        case true => Ok("Removed All Stubbed Data")
-        case _ => InternalServerError("Unexpected Error Clearing MongoDB.")
-      })
+  val removeAll: Action[AnyContent] = Action.async { implicit request =>
+    dataRepository.removeAll().map(result => if (result.ok) {
+      Ok("Removed All Stubbed Data")
+    } else {
+      InternalServerError("Unexpected Error Clearing MongoDB.")
+    })
   }
 }
