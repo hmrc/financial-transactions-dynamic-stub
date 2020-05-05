@@ -20,33 +20,33 @@ import models.SchemaModel
 import org.mockito.ArgumentMatchers
 import org.mockito.Mockito._
 import org.mockito.stubbing.OngoingStubbing
-import reactivemongo.api.commands.{DefaultWriteResult, WriteError, WriteResult}
-import repositories.{SchemaRepository, SchemaRepositoryBase}
+import reactivemongo.api.commands.{UpdateWriteResult, WriteError, WriteResult}
+import repositories.SchemaRepository
 import testUtils.TestSupport
 
 import scala.concurrent.Future
 
 trait MockSchemaRepository extends TestSupport {
 
-  val successWriteResult = DefaultWriteResult(ok = true, n = 1, writeErrors = Seq(), None, None, None)
-  val errorWriteResult = DefaultWriteResult(ok = false, n = 1, writeErrors = Seq(WriteError(1,1,"Error")), None, None, None)
+  val successWriteResult: UpdateWriteResult =
+    UpdateWriteResult(ok = true, 1, 1, Seq(), Seq(), None, None, None)
+  val errorWriteResult: UpdateWriteResult =
+    UpdateWriteResult(ok = false, 1, 0, Seq(), Seq(WriteError(1,1,"Error")), None, None, None)
 
-  lazy val mockSchemaRepository: SchemaRepository = new SchemaRepository {
-    override lazy val repository: SchemaRepositoryBase = mock[SchemaRepositoryBase]
-  }
+  lazy val mockSchemaRepository: SchemaRepository = mock[SchemaRepository]
 
-  override def beforeEach(): Unit = {
-    super.beforeEach()
-    reset(mockSchemaRepository.repository)
-  }
+  def mockAddSchema(model: SchemaModel)(response: Future[WriteResult]): OngoingStubbing[Future[WriteResult]] =
+    when(mockSchemaRepository.insert(ArgumentMatchers.any()))
+      .thenReturn(response)
 
-  def setupMockAddSchema(model: SchemaModel)(response: WriteResult): OngoingStubbing[Future[WriteResult]] =
-    when(mockSchemaRepository.repository.addEntry(ArgumentMatchers.any())(ArgumentMatchers.any())).thenReturn(Future.successful(response))
+  def mockRemoveSchema(id: String)(response: WriteResult): OngoingStubbing[Future[WriteResult]] =
+    when(mockSchemaRepository.removeById(ArgumentMatchers.eq(id)))
+      .thenReturn(Future.successful(response))
 
-  def setupMockRemoveSchema(id: String)(response: WriteResult): OngoingStubbing[Future[WriteResult]] =
-    when(mockSchemaRepository.repository.removeById(ArgumentMatchers.eq(id))(ArgumentMatchers.any())).thenReturn(Future.successful(response))
+  def mockRemoveAllSchemas(response: WriteResult): OngoingStubbing[Future[WriteResult]] =
+    when(mockSchemaRepository.removeAll())
+      .thenReturn(Future.successful(response))
 
-  def setupMockRemoveAllSchemas(response: WriteResult): OngoingStubbing[Future[WriteResult]] =
-    when(mockSchemaRepository.repository.removeAll()(ArgumentMatchers.any())).thenReturn(Future.successful(response))
-
+  def mockFindSchema(response: List[SchemaModel]): OngoingStubbing[Future[List[SchemaModel]]] =
+    when(mockSchemaRepository.find(ArgumentMatchers.any())).thenReturn(Future.successful(response))
 }

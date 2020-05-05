@@ -16,22 +16,19 @@
 
 package testUtils
 
-import com.typesafe.config.Config
-import org.scalatest.mockito.MockitoSugar
-import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach, Suite}
+import org.scalatestplus.mockito.MockitoSugar
 import org.scalatestplus.play.guice.GuiceOneServerPerSuite
+import play.api.mvc.ControllerComponents
+import play.api.test.Injecting
+import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.test.UnitSpec
 
 import scala.concurrent.ExecutionContext
-import uk.gov.hmrc.http.HeaderCarrier
 
-trait TestSupport extends UnitSpec with GuiceOneServerPerSuite with MockitoSugar with BeforeAndAfterAll with BeforeAndAfterEach with MaterializerSupport {
-  this: Suite =>
+trait TestSupport extends UnitSpec with GuiceOneServerPerSuite with MockitoSugar with MaterializerSupport with Injecting {
 
-  implicit val ec: ExecutionContext = app.injector.instanceOf[ExecutionContext]
-
+  implicit val ec: ExecutionContext = inject[ExecutionContext]
   implicit val headerCarrier: HeaderCarrier = HeaderCarrier()
 
-  implicit val config: Config = app.configuration.underlying
-
+  val cc: ControllerComponents = inject[ControllerComponents]
 }

@@ -17,44 +17,45 @@
 package controllers
 
 import javax.inject.{Inject, Singleton}
-
 import models.SchemaModel
 import play.api.libs.json.JsValue
-import play.api.mvc.{Action, AnyContent}
+import play.api.mvc.{Action, AnyContent, ControllerComponents}
 import repositories.SchemaRepository
-import uk.gov.hmrc.play.bootstrap.controller.BaseController
+import uk.gov.hmrc.play.bootstrap.controller.BackendController
 
-import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.ExecutionContext
 
 @Singleton
-class SetupSchemaController @Inject()(schemaRepository: SchemaRepository) extends BaseController {
+class SetupSchemaController @Inject()(schemaRepository: SchemaRepository,
+                                      cc: ControllerComponents)
+                                     (implicit ec: ExecutionContext) extends BackendController(cc) {
 
-  val addSchema: Action[JsValue] = Action.async(parse.json) {
-    implicit request => withJsonBody[SchemaModel](
-      json => {
-        schemaRepository().addEntry(json).map(_.ok match {
-          case true => Ok(s"Successfully added Schema: ${request.body}")
-          case _ => InternalServerError("Could not store data")
+  val addSchema: Action[JsValue] = Action.async(parse.json) { implicit request =>
+    withJsonBody[SchemaModel](
+      model =>
+        schemaRepository.insert(model).map(result => if (result.ok) {
+          Ok(s"Successfully added Schema: ${request.body}")
+        } else {
+          InternalServerError("Could not store data")
         })
-      }
     ).recover {
       case _ => BadRequest("Error Parsing Json SchemaModel")
     }
   }
 
-  val removeSchema: String => Action[AnyContent] = id => Action.async {
-    implicit request =>
-      schemaRepository().removeById(id).map(_.ok match {
-        case true => Ok("Success")
-        case _ => InternalServerError("Could not delete data")
-      })
+  val removeSchema: String => Action[AnyContent] = id => Action.async { implicit request =>
+    schemaRepository.removeById(id).map(result => if (result.ok) {
+      Ok("Success")
+    } else {
+      InternalServerError("Could not delete data")
+    })
   }
 
-  val removeAll: Action[AnyContent] = Action.async {
-    implicit request =>
-      schemaRepository().removeAll().map(_.ok match {
-        case true => Ok("Removed All Schemas")
-        case _ => InternalServerError("Unexpected Error Clearing MongoDB.")
-      })
+  val removeAll: Action[AnyContent] = Action.async { implicit request =>
+    schemaRepository.removeAll().map(result => if (result.ok) {
+      Ok("Removed All Schemas")
+    } else {
+      InternalServerError("Unexpected Error Clearing MongoDB.")
+    })
   }
 }

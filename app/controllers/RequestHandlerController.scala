@@ -17,58 +17,27 @@
 package controllers
 
 import javax.inject.{Inject, Singleton}
-
-import models.HttpMethod._
-import play.api.mvc.{Action, AnyContent}
+import models.HttpMethod.GET
+import play.api.mvc.{Action, AnyContent, ControllerComponents}
 import repositories.DataRepository
-import uk.gov.hmrc.play.bootstrap.controller.BaseController
+import uk.gov.hmrc.play.bootstrap.controller.BackendController
 import utils.SchemaValidation
 
-import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.Future
+import scala.concurrent.ExecutionContext
 
 @Singleton
-class RequestHandlerController @Inject()(schemaValidation: SchemaValidation, dataRepository: DataRepository) extends BaseController {
+class RequestHandlerController @Inject()(schemaValidation: SchemaValidation,
+                                         dataRepository: DataRepository,
+                                         cc: ControllerComponents)
+                                        (implicit ec: ExecutionContext) extends BackendController(cc) {
 
   def getRequestHandler(url: String): Action[AnyContent] = Action.async {
     implicit request => {
-      dataRepository().find("_id" -> s"""${request.uri}""", "method" -> GET).map {
-        stubData => stubData.nonEmpty match {
-          case true => stubData.head.response.isEmpty match {
-            case true => Status(stubData.head.status) //Only return status, no body.
-            case _ => Status(stubData.head.status)(stubData.head.response.get) //return status and body
-          }
-          case _ => {
-            BadRequest(s"Could not find endpoint in Dynamic Stub matching the URI: ${request.uri}")
-          }
-        }
+      dataRepository.find("_id" -> s"""${request.uri}""", "method" -> GET).map {
+        case head :: _ if head.response.nonEmpty => Status(head.status)(head.response.get)
+        case head :: _ => Status(head.status)
+        case _ => NotFound(s"Could not find endpoint in Dynamic Stub matching the URI: ${request.uri}")
       }
     }
   }
-
-  def postRequestHandler(url: String): Action[AnyContent] = Action.async {
-    implicit request => {
-      dataRepository().find("_id" -> s"""${request.uri}""", "method" -> POST).flatMap {
-        stubData => stubData.nonEmpty match {
-          case true => schemaValidation.validateRequestJson(stubData.head.schemaId, request.body.asJson) map {
-            case true => stubData.head.response.isEmpty match {
-              case true => {
-                Status(stubData.head.status)
-              }
-              case _ => {
-                Status(stubData.head.status)(stubData.head.response.get)
-              }
-            }
-            case false => {
-              BadRequest(s"The Json Body:\n\n${request.body.asJson} did not validate against the Schema Definition")
-            }
-          }
-          case _ => {
-            Future(BadRequest(s"Could not find endpoint in Dynamic Stub matching the URI: ${request.uri}"))
-          }
-        }
-      }
-    }
-  }
-
 }
