@@ -20,7 +20,7 @@ import javax.inject.{Inject, Singleton}
 import models.HttpMethod.GET
 import play.api.mvc.{Action, AnyContent, ControllerComponents}
 import repositories.DataRepository
-import uk.gov.hmrc.play.bootstrap.controller.BackendController
+import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 import utils.SchemaValidation
 
 import scala.concurrent.ExecutionContext
