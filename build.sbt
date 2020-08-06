@@ -21,14 +21,15 @@ import uk.gov.hmrc.sbtdistributables.SbtDistributablesPlugin
 import uk.gov.hmrc.sbtdistributables.SbtDistributablesPlugin.publishingSettings
 import uk.gov.hmrc.versioning.SbtGitVersioning
 import sbt.Tests.{Group, SubProcess}
+import play.sbt.routes.RoutesKeys
 
 val appName = "financial-transactions-dynamic-stub"
 
 val compile: Seq[ModuleID] = Seq(
   ws,
-  "uk.gov.hmrc" %% "bootstrap-play-26" % "1.7.0",
+  "uk.gov.hmrc" %% "bootstrap-backend-play-26" % "2.24.0",
   "uk.gov.hmrc" %% "domain" % "5.6.0-play-26",
-  "uk.gov.hmrc" %% "simple-reactivemongo" % "7.26.0-play-26",
+  "uk.gov.hmrc" %% "simple-reactivemongo" % "7.30.0-play-26",
   "com.github.fge" % "json-schema-validator" % "2.2.6"
 )
 
@@ -36,7 +37,7 @@ def test(scope: String = "test,it"): Seq[ModuleID] = Seq(
   "uk.gov.hmrc" %% "hmrctest" % "3.9.0-play-26" % scope,
   "org.scalatest" %% "scalatest" % "3.0.8" % scope,
   "org.pegdown" % "pegdown" % "1.6.0" % scope,
-  "org.scalatestplus.play" %% "scalatestplus-play" % "3.1.2" % scope,
+  "org.scalatestplus.play" %% "scalatestplus-play" % "3.1.3" % scope,
   "com.typesafe.play" %% "play-test" % PlayVersion.current % scope,
   "org.mockito" % "mockito-core" % "3.3.3" % scope
 )
@@ -50,6 +51,8 @@ lazy val scoverageSettings = {
 
   val excludedPackages = Seq(
     "<empty>;Reverse.*",
+    "com.kenshoo.play.metrics.*",
+    "controllers..*Reverse.*",
     "models/.data/..*",
     "filters.*",
     ".handlers.*",
@@ -77,7 +80,8 @@ lazy val scoverageSettings = {
 }
 
 def oneForkedJvmPerTest(tests: Seq[TestDefinition]): Seq[Group] = tests map {
-  test => Group(test.name, Seq(test), SubProcess(ForkOptions(runJVMOptions = Seq("-Dtest.name=" + test.name))))
+  test => Group(test.name, Seq(test), SubProcess(
+    ForkOptions().withRunJVMOptions(Vector("-Dtest.name=" + test.name))))
 }
 
 lazy val microservice = Project(appName, file("."))
@@ -89,11 +93,12 @@ lazy val microservice = Project(appName, file("."))
   .settings(defaultSettings(): _*)
   .settings(
     PlayKeys.playDefaultPort := 9086,
+    scalaVersion := "2.12.11",
     majorVersion := 0,
     libraryDependencies ++= appDependencies,
     retrieveManaged := true,
     evictionWarningOptions in update := EvictionWarningOptions.default.withWarnScalaVersionEviction(false),
-    routesGenerator := InjectedRoutesGenerator
+    RoutesKeys.routesImport := Seq.empty
   )
   .configs(IntegrationTest)
   .settings(inConfig(IntegrationTest)(Defaults.itSettings): _*)

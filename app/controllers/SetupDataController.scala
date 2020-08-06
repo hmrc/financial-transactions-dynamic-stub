@@ -22,7 +22,7 @@ import models.HttpMethod._
 import play.api.libs.json.{JsValue, Json}
 import play.api.mvc.{Action, AnyContent, ControllerComponents, Result}
 import repositories.DataRepository
-import uk.gov.hmrc.play.bootstrap.controller.BackendController
+import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 import utils.SchemaValidation
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -64,7 +64,7 @@ class SetupDataController @Inject()(schemaValidation: SchemaValidation,
     })
   }
 
-  val removeData: String => Action[AnyContent] = url => Action.async { implicit request =>
+  val removeData: String => Action[AnyContent] = url => Action.async {
     dataRepository.removeById(url).map(result => if (result.ok) {
       Ok("Success")
     } else {
@@ -72,7 +72,7 @@ class SetupDataController @Inject()(schemaValidation: SchemaValidation,
     })
   }
 
-  val removeAll: Action[AnyContent] = Action.async { implicit request =>
+  val removeAll: Action[AnyContent] = Action.async {
     dataRepository.removeAll().map(result => if (result.ok) {
       Ok("Removed All Stubbed Data")
     } else {
