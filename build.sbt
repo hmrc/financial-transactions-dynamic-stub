@@ -29,7 +29,7 @@ val compile: Seq[ModuleID] = Seq(
   ws,
   "uk.gov.hmrc" %% "bootstrap-backend-play-26" % "2.24.0",
   "uk.gov.hmrc" %% "domain" % "5.6.0-play-26",
-  "uk.gov.hmrc" %% "simple-reactivemongo" % "7.30.0-play-26",
+  "uk.gov.hmrc" %% "simple-reactivemongo" % "7.26.0-play-26",
   "com.github.fge" % "json-schema-validator" % "2.2.6"
 )
 
@@ -39,7 +39,8 @@ def test(scope: String = "test,it"): Seq[ModuleID] = Seq(
   "org.pegdown" % "pegdown" % "1.6.0" % scope,
   "org.scalatestplus.play" %% "scalatestplus-play" % "3.1.3" % scope,
   "com.typesafe.play" %% "play-test" % PlayVersion.current % scope,
-  "org.mockito" % "mockito-core" % "3.3.3" % scope
+  "org.mockito" % "mockito-core" % "3.3.3" % scope,
+  "uk.gov.hmrc" %% "reactivemongo-test" % "4.21.0-play-26" % scope
 )
 
 lazy val appDependencies : Seq[ModuleID] = compile ++ test()
