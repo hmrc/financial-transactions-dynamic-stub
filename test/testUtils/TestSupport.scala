@@ -17,7 +17,7 @@
 package testUtils
 
 import org.scalatestplus.mockito.MockitoSugar
-import org.scalatestplus.play.guice.GuiceOneServerPerSuite
+import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.mvc.ControllerComponents
 import play.api.test.Injecting
 import uk.gov.hmrc.http.HeaderCarrier
@@ -25,7 +25,7 @@ import uk.gov.hmrc.play.test.UnitSpec
 
 import scala.concurrent.ExecutionContext
 
-trait TestSupport extends UnitSpec with GuiceOneServerPerSuite with MockitoSugar with MaterializerSupport with Injecting {
+trait TestSupport extends UnitSpec with GuiceOneAppPerSuite with MockitoSugar with MaterializerSupport with Injecting {
 
   implicit val ec: ExecutionContext = inject[ExecutionContext]
   implicit val headerCarrier: HeaderCarrier = HeaderCarrier()
