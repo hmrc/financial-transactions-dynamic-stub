@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 HM Revenue & Customs
+ * Copyright 2021 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -29,7 +29,7 @@ val compile: Seq[ModuleID] = Seq(
   ws,
   "uk.gov.hmrc" %% "bootstrap-backend-play-26" % "2.24.0",
   "uk.gov.hmrc" %% "domain" % "5.6.0-play-26",
-  "uk.gov.hmrc" %% "simple-reactivemongo" % "7.26.0-play-26",
+  "uk.gov.hmrc" %% "simple-reactivemongo" % "7.30.0-play-26",
   "com.github.fge" % "json-schema-validator" % "2.2.6"
 )
 
@@ -40,7 +40,7 @@ def test(scope: String = "test,it"): Seq[ModuleID] = Seq(
   "org.scalatestplus.play" %% "scalatestplus-play" % "3.1.3" % scope,
   "com.typesafe.play" %% "play-test" % PlayVersion.current % scope,
   "org.mockito" % "mockito-core" % "3.3.3" % scope,
-  "uk.gov.hmrc" %% "reactivemongo-test" % "4.21.0-play-26" % scope
+  "uk.gov.hmrc" %% "reactivemongo-test" % "4.22.0-play-26" % scope
 )
 
 lazy val appDependencies : Seq[ModuleID] = compile ++ test()
@@ -51,10 +51,11 @@ lazy val scoverageSettings = {
   import scoverage.ScoverageKeys
 
   val excludedPackages = Seq(
-    "<empty>;Reverse.*",
+    "<empty>",
+    "Reverse.*",
     "com.kenshoo.play.metrics.*",
-    "controllers..*Reverse.*",
-    "models/.data/..*",
+    "controllers.*Reverse.*",
+    "models/.data/.*",
     "filters.*",
     ".handlers.*",
     "components.*",
