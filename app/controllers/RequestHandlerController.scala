@@ -42,6 +42,6 @@ class RequestHandlerController @Inject()(dataRepository: DataRepository,
 
       val errorResponseBody: JsValue = Json.obj(
         "code" -> "NOT_FOUND",
-        "reason" -> "The remote endpoint has indicated that no associated data found."
+        "reason" -> "The remote endpoint has indicated that no data can be found."
       )
 }

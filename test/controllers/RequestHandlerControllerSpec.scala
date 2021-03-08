@@ -64,6 +64,10 @@ class RequestHandlerControllerSpec extends MockSchemaValidation with MockDataRep
       mockFind(List())
 
       status(result) shouldBe Status.NOT_FOUND
+      await(bodyOf(result)) shouldBe Json.obj(
+        "code" -> "NOT_FOUND",
+        "reason" -> "The remote endpoint has indicated that no data can be found."
+      ).toString
     }
   }
 }
