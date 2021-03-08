@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 HM Revenue & Customs
+ * Copyright 2021 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,7 +24,7 @@ import play.mvc.Http.Status
 
 class RequestHandlerControllerSpec extends MockSchemaValidation with MockDataRepository {
 
-  object TestRequestHandlerController extends RequestHandlerController(mockSchemaValidation, mockDataRepository, cc)
+  object TestRequestHandlerController extends RequestHandlerController(mockDataRepository, cc)
 
   lazy val successModel: DataModel = DataModel(
     _id = "test",
@@ -64,6 +64,10 @@ class RequestHandlerControllerSpec extends MockSchemaValidation with MockDataRep
       mockFind(List())
 
       status(result) shouldBe Status.NOT_FOUND
+      await(bodyOf(result)) shouldBe Json.obj(
+        "code" -> "NOT_FOUND",
+        "reason" -> "The remote endpoint has indicated that no data can be found."
+      ).toString
     }
   }
 }
